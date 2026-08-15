@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-auth-biometric-available"
+description = "Enables the auth_biometric_available command without any pre-configured scope."
+commands.allow = ["auth_biometric_available"]
+
+[[permission]]
+identifier = "deny-auth-biometric-available"
+description = "Denies the auth_biometric_available command without any pre-configured scope."
+commands.deny = ["auth_biometric_available"]

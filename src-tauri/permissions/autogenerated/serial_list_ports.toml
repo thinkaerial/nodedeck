@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-serial-list-ports"
+description = "Enables the serial_list_ports command without any pre-configured scope."
+commands.allow = ["serial_list_ports"]
+
+[[permission]]
+identifier = "deny-serial-list-ports"
+description = "Denies the serial_list_ports command without any pre-configured scope."
+commands.deny = ["serial_list_ports"]

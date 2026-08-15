@@ -1,0 +1,102 @@
+import { useEffect, useState } from "react";
+import { Radar, Play, Server } from "lucide-react";
+import { Button } from "../../components/ui/Button";
+import { Card, CardHeader } from "../../components/ui/Card";
+import { EmptyState } from "../../components/ui/EmptyState";
+import { AddDeviceModal } from "../../components/devices/AddDeviceModal";
+import * as discovery from "../../ipc/discovery";
+import type { DiscoveredDevice } from "../../ipc/discovery";
+
+export function NetworkScannerScreen() {
+  const [cidr, setCidr] = useState("");
+  const [scanning, setScanning] = useState(false);
+  const [results, setResults] = useState<DiscoveredDevice[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [connectHost, setConnectHost] = useState<string | null>(null);
+
+  useEffect(() => {
+    discovery.getDefaultCidr().then((c) => c && setCidr(c)).catch(() => {});
+  }, []);
+
+  async function runScan() {
+    setScanning(true);
+    setError(null);
+    try {
+      const found = await discovery.scan(cidr);
+      setResults(found);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setScanning(false);
+    }
+  }
+
+  return (
+    <div className="mx-auto max-w-5xl space-y-4 p-4">
+      <Card>
+        <div className="flex items-center gap-3 p-3">
+          <div className="flex-1">
+            <label className="mb-1 block text-[11px] font-medium text-text-tertiary">CIDR range</label>
+            <input
+              value={cidr}
+              onChange={(e) => setCidr(e.target.value)}
+              placeholder="10.104.17.0/24"
+              className="w-full rounded-md border border-border-default bg-bg-base px-2.5 py-1.5 font-mono text-[12px] text-text-primary outline-none focus:border-accent"
+            />
+          </div>
+          <Button
+            variant="primary"
+            size="sm"
+            icon={scanning ? <Radar size={13} className="animate-spin" /> : <Play size={13} />}
+            onClick={runScan}
+            disabled={scanning || !cidr}
+          >
+            {scanning ? "Scanning…" : "Scan LAN"}
+          </Button>
+        </div>
+        <div className="border-t border-border-subtle px-3 py-2 text-[11px] text-text-tertiary">
+          TCP-probes port 22 across the range (max /22) and cross-references your Mac's ARP cache for MAC
+          vendor. No mDNS/full-port scan yet — see TASKS.md Stage 2.
+        </div>
+      </Card>
+
+      <Card>
+        <CardHeader
+          title="Discovered devices"
+          subtitle={
+            scanning
+              ? `Scanning ${cidr}…`
+              : results
+                ? `${results.length} device(s) with SSH open`
+                : "Run a scan to discover devices"
+          }
+        />
+        {error && <div className="px-3 py-3 text-[12px] text-status-error">{error}</div>}
+        {!error && results !== null && results.length === 0 && (
+          <EmptyState icon={<Server size={18} />} title="No devices responded on port 22" />
+        )}
+        {!error && results === null && !scanning && (
+          <EmptyState icon={<Radar size={18} />} title="No scan run yet" detail={`Click "Scan LAN" to probe ${cidr || "your network"}.`} />
+        )}
+        {results && results.length > 0 && (
+          <div className="divide-y divide-border-subtle">
+            {results.map((d) => (
+              <div key={d.ip} className="flex items-center gap-3 px-3 py-2.5 text-[13px]">
+                <Server size={15} className="text-status-online" />
+                <span className="w-36 font-mono text-[12px] text-text-primary">{d.ip}</span>
+                <span className="w-40 font-mono text-[11px] text-text-tertiary">{d.mac ?? "MAC unknown"}</span>
+                <span className="w-48 truncate text-[11px] text-text-tertiary">{d.vendor ?? "Unknown vendor"}</span>
+                <span className="w-16 text-[11px] text-text-tertiary">{d.latency_ms}ms</span>
+                <Button size="sm" variant="secondary" className="ml-auto" onClick={() => setConnectHost(d.ip)}>
+                  Save & connect
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {connectHost && <AddDeviceModal initialHost={connectHost} onClose={() => setConnectHost(null)} />}
+    </div>
+  );
+}

@@ -1,0 +1,155 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------- */
+/* NodeDeck design tokens — dense, dark-first ops console.                */
+/* Dark is the primary/default surface; a light palette exists for        */
+/* Settings > Appearance but every screen is designed dark-first.         */
+/* ---------------------------------------------------------------------- */
+
+:root {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+
+  /* Light palette (used only when data-theme="light") */
+  --bg-base: #f4f5f7;
+  --bg-surface: #ffffff;
+  --bg-surface-2: #eceef2;
+  --bg-overlay: #ffffff;
+  --bg-hover: #e9ebef;
+  --bg-selected: #e2e8ff;
+
+  --text-primary: #14161c;
+  --text-secondary: #4b4f5a;
+  --text-tertiary: #7d818c;
+  --text-disabled: #b3b6bd;
+
+  --border-subtle: #e4e6eb;
+  --border-default: #d3d6dd;
+  --border-strong: #b3b7c1;
+
+  --accent: #0891b2;
+  --accent-hover: #0e7490;
+  --accent-fg: #ffffff;
+  --accent-soft: rgba(8, 145, 178, 0.1);
+
+  --status-online: #16a34a;
+  --status-offline: #8a8f99;
+  --status-warning: #d97706;
+  --status-error: #dc2626;
+  --status-connecting: #2563eb;
+
+  --shadow-1: 0 1px 2px rgba(20, 22, 28, 0.06);
+  --shadow-2: 0 8px 24px rgba(20, 22, 28, 0.12);
+
+  color-scheme: light;
+}
+
+:root:not([data-theme="light"]) {
+  --bg-base: #0b0d12;
+  --bg-surface: #12141b;
+  --bg-surface-2: #191c25;
+  --bg-overlay: #1c1f29;
+  --bg-hover: #20232e;
+  --bg-selected: #16324a;
+
+  --text-primary: #e8e9ed;
+  --text-secondary: #a8acb8;
+  --text-tertiary: #767b88;
+  --text-disabled: #4c505c;
+
+  --border-subtle: #1e212b;
+  --border-default: #272b37;
+  --border-strong: #383d4b;
+
+  --accent: #22d3ee;
+  --accent-hover: #67e3f9;
+  --accent-fg: #06222a;
+  --accent-soft: rgba(34, 211, 238, 0.12);
+
+  --status-online: #34d399;
+  --status-offline: #6b7180;
+  --status-warning: #fbbf24;
+  --status-error: #f87171;
+  --status-connecting: #60a5fa;
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-2: 0 12px 32px rgba(0, 0, 0, 0.45);
+
+  color-scheme: dark;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  --color-bg-base: var(--bg-base);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-surface-2: var(--bg-surface-2);
+  --color-bg-overlay: var(--bg-overlay);
+  --color-bg-hover: var(--bg-hover);
+  --color-bg-selected: var(--bg-selected);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-disabled: var(--text-disabled);
+
+  --color-border-subtle: var(--border-subtle);
+  --color-border-default: var(--border-default);
+  --color-border-strong: var(--border-strong);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+
+  --color-status-online: var(--status-online);
+  --color-status-offline: var(--status-offline);
+  --color-status-warning: var(--status-warning);
+  --color-status-error: var(--status-error);
+  --color-status-connecting: var(--status-connecting);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 5px;
+  border: 2px solid var(--bg-surface);
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--text-primary);
+}

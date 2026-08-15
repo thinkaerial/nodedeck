@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-ssh-pty-close"
+description = "Enables the ssh_pty_close command without any pre-configured scope."
+commands.allow = ["ssh_pty_close"]
+
+[[permission]]
+identifier = "deny-ssh-pty-close"
+description = "Denies the ssh_pty_close command without any pre-configured scope."
+commands.deny = ["ssh_pty_close"]

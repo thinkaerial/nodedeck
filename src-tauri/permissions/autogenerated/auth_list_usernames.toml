@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-auth-list-usernames"
+description = "Enables the auth_list_usernames command without any pre-configured scope."
+commands.allow = ["auth_list_usernames"]
+
+[[permission]]
+identifier = "deny-auth-list-usernames"
+description = "Denies the auth_list_usernames command without any pre-configured scope."
+commands.deny = ["auth_list_usernames"]

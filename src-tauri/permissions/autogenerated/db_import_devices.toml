@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-db-import-devices"
+description = "Enables the db_import_devices command without any pre-configured scope."
+commands.allow = ["db_import_devices"]
+
+[[permission]]
+identifier = "deny-db-import-devices"
+description = "Denies the db_import_devices command without any pre-configured scope."
+commands.deny = ["db_import_devices"]

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-serial-open"
+description = "Enables the serial_open command without any pre-configured scope."
+commands.allow = ["serial_open"]
+
+[[permission]]
+identifier = "deny-serial-open"
+description = "Denies the serial_open command without any pre-configured scope."
+commands.deny = ["serial_open"]

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-auth-account-exists"
+description = "Enables the auth_account_exists command without any pre-configured scope."
+commands.allow = ["auth_account_exists"]
+
+[[permission]]
+identifier = "deny-auth-account-exists"
+description = "Denies the auth_account_exists command without any pre-configured scope."
+commands.deny = ["auth_account_exists"]

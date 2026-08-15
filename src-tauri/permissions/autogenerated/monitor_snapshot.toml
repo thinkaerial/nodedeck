@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-monitor-snapshot"
+description = "Enables the monitor_snapshot command without any pre-configured scope."
+commands.allow = ["monitor_snapshot"]
+
+[[permission]]
+identifier = "deny-monitor-snapshot"
+description = "Denies the monitor_snapshot command without any pre-configured scope."
+commands.deny = ["monitor_snapshot"]

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-ssh-test-connection"
+description = "Enables the ssh_test_connection command without any pre-configured scope."
+commands.allow = ["ssh_test_connection"]
+
+[[permission]]
+identifier = "deny-ssh-test-connection"
+description = "Denies the ssh_test_connection command without any pre-configured scope."
+commands.deny = ["ssh_test_connection"]

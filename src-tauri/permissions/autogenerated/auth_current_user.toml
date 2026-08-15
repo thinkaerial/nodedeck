@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-auth-current-user"
+description = "Enables the auth_current_user command without any pre-configured scope."
+commands.allow = ["auth_current_user"]
+
+[[permission]]
+identifier = "deny-auth-current-user"
+description = "Denies the auth_current_user command without any pre-configured scope."
+commands.deny = ["auth_current_user"]

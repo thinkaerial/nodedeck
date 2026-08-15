@@ -1,0 +1,14 @@
+# Node
+node_modules/
+dist/
+
+# Rust / Tauri
+src-tauri/target/
+
+# Editor / OS
+.DS_Store
+*.log
+
+# Local env
+.env
+.env.local

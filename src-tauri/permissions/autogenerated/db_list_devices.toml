@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-db-list-devices"
+description = "Enables the db_list_devices command without any pre-configured scope."
+commands.allow = ["db_list_devices"]
+
+[[permission]]
+identifier = "deny-db-list-devices"
+description = "Denies the db_list_devices command without any pre-configured scope."
+commands.deny = ["db_list_devices"]

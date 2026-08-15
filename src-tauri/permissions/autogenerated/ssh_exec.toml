@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-ssh-exec"
+description = "Enables the ssh_exec command without any pre-configured scope."
+commands.allow = ["ssh_exec"]
+
+[[permission]]
+identifier = "deny-ssh-exec"
+description = "Denies the ssh_exec command without any pre-configured scope."
+commands.deny = ["ssh_exec"]
