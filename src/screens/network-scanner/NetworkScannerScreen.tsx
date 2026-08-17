@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Radar, Play, Server } from "lucide-react";
 import { Button } from "../../components/ui/Button";
+import { Badge } from "../../components/ui/Badge";
 import { Card, CardHeader } from "../../components/ui/Card";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { AddDeviceModal } from "../../components/devices/AddDeviceModal";
@@ -55,8 +56,9 @@ export function NetworkScannerScreen() {
           </Button>
         </div>
         <div className="border-t border-border-subtle px-3 py-2 text-[11px] text-text-tertiary">
-          TCP-probes port 22 across the range (max /22) and cross-references your Mac's ARP cache for MAC
-          vendor. No mDNS/full-port scan yet — see TASKS.md Stage 2.
+          Pings every host across the range (max /22) and separately checks port 22, then cross-references
+          your Mac's ARP cache for MAC vendor. Shows every reachable device — SSH-open ones are what this
+          app can actually manage. No mDNS/full-port scan yet — see TASKS.md Stage 2.
         </div>
       </Card>
 
@@ -67,13 +69,13 @@ export function NetworkScannerScreen() {
             scanning
               ? `Scanning ${cidr}…`
               : results
-                ? `${results.length} device(s) with SSH open`
+                ? `${results.length} device(s) found`
                 : "Run a scan to discover devices"
           }
         />
         {error && <div className="px-3 py-3 text-[12px] text-status-error">{error}</div>}
         {!error && results !== null && results.length === 0 && (
-          <EmptyState icon={<Server size={18} />} title="No devices responded on port 22" />
+          <EmptyState icon={<Server size={18} />} title="No devices responded" />
         )}
         {!error && results === null && !scanning && (
           <EmptyState icon={<Radar size={18} />} title="No scan run yet" detail={`Click "Scan LAN" to probe ${cidr || "your network"}.`} />
@@ -87,7 +89,15 @@ export function NetworkScannerScreen() {
                 <span className="w-40 font-mono text-[11px] text-text-tertiary">{d.mac ?? "MAC unknown"}</span>
                 <span className="w-48 truncate text-[11px] text-text-tertiary">{d.vendor ?? "Unknown vendor"}</span>
                 <span className="w-16 text-[11px] text-text-tertiary">{d.latency_ms}ms</span>
-                <Button size="sm" variant="secondary" className="ml-auto" onClick={() => setConnectHost(d.ip)}>
+                {d.ssh_open ? <Badge variant="accent">SSH open</Badge> : <Badge>no SSH</Badge>}
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="ml-auto"
+                  disabled={!d.ssh_open}
+                  title={d.ssh_open ? undefined : "No SSH server detected on port 22 — this app manages devices over SSH"}
+                  onClick={() => setConnectHost(d.ip)}
+                >
                   Save & connect
                 </Button>
               </div>

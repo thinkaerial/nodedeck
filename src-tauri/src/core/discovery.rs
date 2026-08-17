@@ -106,25 +106,30 @@ pub async fn scan(cidr: &str) -> Result<Vec<DiscoveredDevice>> {
     let probes = stream::iter(ips.into_iter().map(|ip| async move {
         let addr = SocketAddr::from((ip, 22));
         let start = std::time::Instant::now();
-        let open = tokio::time::timeout(Duration::from_millis(400), TcpStream::connect(addr))
-            .await
-            .map(|r| r.is_ok())
-            .unwrap_or(false);
-        (ip, open, start.elapsed().as_millis() as u64)
+        let (ssh_open, alive) = tokio::join!(
+            async {
+                tokio::time::timeout(Duration::from_millis(400), TcpStream::connect(addr))
+                    .await
+                    .map(|r| r.is_ok())
+                    .unwrap_or(false)
+            },
+            ping_once(ip)
+        );
+        (ip, ssh_open, alive, start.elapsed().as_millis() as u64)
     }))
-    .buffer_unordered(96)
+    .buffer_unordered(64)
     .collect::<Vec<_>>()
     .await;
 
-    let open_count = probes.iter().filter(|(_, open, _)| *open).count();
-    log::info!("discovery::scan complete: {open_count}/{} hosts had port 22 open", probes.len());
+    let reachable_count = probes.iter().filter(|(_, ssh, alive, _)| *ssh || *alive).count();
+    log::info!("discovery::scan complete: {reachable_count}/{} hosts reachable", probes.len());
 
     let arp = read_arp_table().await;
 
     let mut devices: Vec<DiscoveredDevice> = probes
         .into_iter()
-        .filter(|(_, open, _)| *open)
-        .map(|(ip, open, latency)| {
+        .filter(|(_, ssh_open, alive, _)| *ssh_open || *alive)
+        .map(|(ip, ssh_open, _, latency)| {
             let ip_str = ip.to_string();
             let mac = arp.get(&ip_str).cloned();
             let vendor = mac.as_deref().and_then(vendor_for_mac).map(|s| s.to_string());
@@ -132,7 +137,7 @@ pub async fn scan(cidr: &str) -> Result<Vec<DiscoveredDevice>> {
                 ip: ip_str,
                 mac,
                 vendor,
-                ssh_open: open,
+                ssh_open,
                 latency_ms: Some(latency),
             }
         })
@@ -140,4 +145,36 @@ pub async fn scan(cidr: &str) -> Result<Vec<DiscoveredDevice>> {
 
     devices.sort_by(|a, b| a.ip.cmp(&b.ip));
     Ok(devices)
+}
+
+/// General liveness check (any device, not just SSH) via the system `ping`
+/// binary — a single ICMP echo, platform-specific flags. Used so the
+/// scanner surfaces every reachable host (phones, laptops, etc.), not just
+/// SSH-capable companion computers; `ssh_open` on each result still tells
+/// you which ones this app can actually manage.
+async fn ping_once(ip: Ipv4Addr) -> bool {
+    let ip_str = ip.to_string();
+    let mut cmd = if cfg!(target_os = "windows") {
+        let mut c = Command::new("ping");
+        c.args(["-n", "1", "-w", "400", &ip_str]);
+        c
+    } else if cfg!(target_os = "macos") {
+        let mut c = Command::new("ping");
+        c.args(["-c", "1", "-W", "400", &ip_str]);
+        c
+    } else {
+        // Linux: -W is whole seconds, not milliseconds.
+        let mut c = Command::new("ping");
+        c.args(["-c", "1", "-W", "1", &ip_str]);
+        c
+    };
+    cmd.kill_on_drop(true);
+    cmd.stdout(std::process::Stdio::null());
+    cmd.stderr(std::process::Stdio::null());
+    tokio::time::timeout(Duration::from_millis(500), cmd.status())
+        .await
+        .ok()
+        .and_then(|r| r.ok())
+        .map(|status| status.success())
+        .unwrap_or(false)
 }
