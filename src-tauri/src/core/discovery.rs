@@ -119,24 +119,28 @@ pub async fn scan(cidr: &str) -> Result<Vec<DiscoveredDevice>> {
 
     let arp = read_arp_table().await;
 
-    // A TCP connect attempt makes the OS resolve ARP for that IP even when
-    // every probed port times out at L4 — so a host with a fresh ARP entry
-    // is provably alive too, catching devices that don't answer on any of
-    // the handful of ports we probe above.
+    // A resolved MAC is required, not just optional metadata: some networks
+    // (this one included — campus/managed networks with a security
+    // appliance on the gateway) auto-accept TCP connects to addresses
+    // nobody's using, which made every unassigned IP falsely show up as
+    // "reachable". A real device on the LAN always has an ARP reply; `arp -a`
+    // marks unanswered addresses "(incomplete)", which read_arp_table
+    // already excludes — so no MAC here means no real device answered,
+    // regardless of what the TCP probe claimed.
     let mut devices: Vec<DiscoveredDevice> = probes
         .into_iter()
-        .filter(|(ip, ssh_open, alive, _)| *ssh_open || *alive || arp.contains_key(&ip.to_string()))
-        .map(|(ip, ssh_open, _, latency)| {
+        .filter(|(_, ssh_open, alive, _)| *ssh_open || *alive)
+        .filter_map(|(ip, ssh_open, _, latency)| {
             let ip_str = ip.to_string();
-            let mac = arp.get(&ip_str).cloned();
-            let vendor = mac.as_deref().and_then(vendor_for_mac).map(|s| s.to_string());
-            DiscoveredDevice {
+            let mac = arp.get(&ip_str).cloned()?;
+            let vendor = vendor_for_mac(&mac).map(|s| s.to_string());
+            Some(DiscoveredDevice {
                 ip: ip_str,
-                mac,
+                mac: Some(mac),
                 vendor,
                 ssh_open,
                 latency_ms: Some(latency),
-            }
+            })
         })
         .collect();
 

@@ -69,9 +69,9 @@ export function NetworkScannerScreen() {
           </Button>
         </div>
         <div className="border-t border-border-subtle px-3 py-2 text-[11px] text-text-tertiary">
-          Pings every host across the range (max /22) and separately checks port 22, then cross-references
-          your Mac's ARP cache for MAC vendor. Shows every reachable device — SSH-open ones are what this
-          app can actually manage. No mDNS/full-port scan yet — see TASKS.md Stage 2.
+          Probes every host across the range (max /22) and only lists ones with a real ARP reply — a genuine
+          device on the LAN, not just a network accepting the connection on a host's behalf. SSH-open ones
+          are what this app can actually manage. No mDNS/full-port scan yet — see TASKS.md Stage 2.
         </div>
       </Card>
 
