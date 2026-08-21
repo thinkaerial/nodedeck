@@ -72,6 +72,7 @@ interface RealDevicesState {
   loadFromDb: () => Promise<void>;
   addDevice: (device: RealDevice) => void;
   updateDevice: (id: string, patch: Partial<RealDevice>) => void;
+  setStatus: (id: string, status: RealDevice["status"], lastSeen?: string) => void;
   removeDevice: (id: string) => void;
 }
 
@@ -113,6 +114,16 @@ export const useRealDevicesStore = create<RealDevicesState>((set, get) => ({
     }));
     const updated = get().devices.find((d) => d.id === id);
     if (updated) db.saveDevice(toDbDevice(updated)).catch(() => {});
+  },
+  // In-memory only, deliberately not persisted — status/lastSeen are derived
+  // from live reachability checks (heartbeat, reconnect), not real device
+  // config, so writing them to SQLite on every 20s heartbeat tick for every
+  // saved device was pure overhead with no value (they'd be stale the next
+  // time the app opens anyway).
+  setStatus: (id, status, lastSeen) => {
+    set((s) => ({
+      devices: s.devices.map((d) => (d.id === id ? { ...d, status, ...(lastSeen ? { lastSeen } : {}) } : d)),
+    }));
   },
   removeDevice: (id) => {
     set((s) => ({ devices: s.devices.filter((d) => d.id !== id) }));

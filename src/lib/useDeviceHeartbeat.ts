@@ -12,7 +12,7 @@ const INTERVAL_MS = 20_000;
  */
 export function useDeviceHeartbeat() {
   const devices = useRealDevicesStore((s) => s.devices);
-  const updateDevice = useRealDevicesStore((s) => s.updateDevice);
+  const setStatus = useRealDevicesStore((s) => s.setStatus);
 
   useEffect(() => {
     let cancelled = false;
@@ -25,12 +25,9 @@ export function useDeviceHeartbeat() {
             const result = await portCheck(d.connection.host, d.connection.port);
             if (cancelled) return;
             const reachable = result.exit_code === 0;
-            updateDevice(d.id, {
-              status: reachable ? "online" : "offline",
-              lastSeen: reachable ? "just now" : d.lastSeen,
-            });
+            setStatus(d.id, reachable ? "online" : "offline", reachable ? "just now" : undefined);
           } catch {
-            if (!cancelled) updateDevice(d.id, { status: "offline" });
+            if (!cancelled) setStatus(d.id, "offline");
           }
         }),
       );

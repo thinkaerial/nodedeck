@@ -5,6 +5,7 @@ import { Button } from "../../components/ui/Button";
 import { listDir as sftpListDir, uploadFile, downloadFile, onTransferProgress } from "../../ipc/sftp";
 import * as localfs from "../../ipc/localfs";
 import type { SftpEntry } from "../../ipc/types";
+import { useFilesBrowserStore } from "../../state/filesBrowser";
 
 function formatBytes(bytes: number | null) {
   if (bytes == null) return "—";
@@ -95,13 +96,33 @@ export function FilesScreen() {
   const device = useDevice();
   const connection = useDeviceConnection();
 
-  const [localPath, setLocalPath] = useState<string | null>(null);
+  const storedLocalPath = useFilesBrowserStore((s) => s.localPath);
+  const setStoredLocalPath = useFilesBrowserStore((s) => s.setLocalPath);
+  const remotePathByDevice = useFilesBrowserStore((s) => s.remotePathByDevice);
+  const setStoredRemotePath = useFilesBrowserStore((s) => s.setRemotePath);
+
+  const [localPath, setLocalPathState] = useState<string | null>(storedLocalPath);
   const [localEntries, setLocalEntries] = useState<localfs.LocalEntry[]>([]);
   const [localLoading, setLocalLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [selectedLocal, setSelectedLocal] = useState<{ name: string; type: "dir" | "file" } | null>(null);
 
-  const [remotePath, setRemotePath] = useState(".");
+  function setLocalPath(update: string | null | ((p: string | null) => string | null)) {
+    setLocalPathState((prev) => {
+      const next = typeof update === "function" ? update(prev) : update;
+      if (next !== null) setStoredLocalPath(next);
+      return next;
+    });
+  }
+
+  const [remotePath, setRemotePathState] = useState(remotePathByDevice[device.id] ?? ".");
+  function setRemotePath(update: string | ((p: string) => string)) {
+    setRemotePathState((prev) => {
+      const next = typeof update === "function" ? update(prev) : update;
+      setStoredRemotePath(device.id, next);
+      return next;
+    });
+  }
   const [remoteEntries, setRemoteEntries] = useState<SftpEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -131,7 +152,9 @@ export function FilesScreen() {
   }
 
   useEffect(() => {
+    if (localPath !== null) return;
     localfs.homeDir().then((h) => setLocalPath(h ?? ".")).catch(() => setLocalPath("."));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

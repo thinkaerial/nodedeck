@@ -1,6 +1,7 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Server, Wifi, ShieldAlert, Radar, ArrowRight } from "lucide-react";
-import { tasks, auditLog } from "../../mocks/data";
+import { tasks as mockTasks, auditLog as mockAuditLog } from "../../mocks/data";
 import { useAllDevices } from "../../lib/useAllDevices";
 import { useUIStore } from "../../state/store";
 import { StatTile } from "../../components/ui/StatTile";
@@ -10,6 +11,14 @@ import { Sparkline } from "../../components/ui/Sparkline";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { DEVICE_TYPE_ICON } from "../../lib/deviceMeta";
 import { Button } from "../../components/ui/Button";
+import { listTasks } from "../../ipc/tasks";
+import type { TaskWithRuns } from "../../ipc/tasks";
+import { listAuditLog } from "../../ipc/groups";
+import type { DbAuditEntry } from "../../ipc/groups";
+
+function formatAuditTime(at: number) {
+  return new Date(at * 1000).toLocaleString();
+}
 
 export function DashboardScreen() {
   const devices = useAllDevices();
@@ -17,6 +26,16 @@ export function DashboardScreen() {
   const online = devices.filter((d) => d.status === "online").length;
   const warning = devices.filter((d) => d.status === "warning").length;
   const offline = devices.filter((d) => d.status === "offline").length;
+
+  const [realTasks, setRealTasks] = useState<TaskWithRuns[]>([]);
+  const [realAudit, setRealAudit] = useState<DbAuditEntry[]>([]);
+
+  useEffect(() => {
+    listTasks().then(setRealTasks).catch(() => {});
+    listAuditLog().then(setRealAudit).catch(() => {});
+  }, []);
+
+  const activeTaskCount = realTasks.filter((t) => t.runs.some((r) => r.status === "running" || r.status === "queued")).length;
 
   return (
     <div className="mx-auto max-w-6xl space-y-4 p-4">
@@ -29,11 +48,7 @@ export function DashboardScreen() {
           icon={<ShieldAlert size={14} />}
         />
         <StatTile label="Offline" value={offline} icon={<Wifi size={14} />} />
-        <StatTile
-          label="Active tasks"
-          value={showDemo ? tasks.filter((t) => t.results.some((r) => r.status === "running")).length : 0}
-          icon={<Radar size={14} />}
-        />
+        <StatTile label="Active tasks" value={activeTaskCount} icon={<Radar size={14} />} />
       </div>
 
       <Card>
@@ -75,11 +90,27 @@ export function DashboardScreen() {
       <div className="grid grid-cols-2 gap-4">
         <Card>
           <CardHeader title="Recent task runs" subtitle="Latest fleet operations" />
-          {!showDemo ? (
-            <EmptyState title="No task runs yet" detail="Fleet tasks aren't implemented yet." />
-          ) : (
+          {realTasks.length === 0 && !showDemo && (
+            <EmptyState title="No task runs yet" detail="Create a task from the Tasks screen to see it here." />
+          )}
+          {realTasks.length > 0 && (
             <div className="divide-y divide-border-subtle">
-              {tasks.map((t) => (
+              {realTasks.slice(0, 6).map(({ task, runs }) => (
+                <div key={task.id} className="flex items-center justify-between px-3 py-2.5 text-[12px]">
+                  <div>
+                    <div className="font-medium text-text-primary">{task.name}</div>
+                    <div className="text-[11px] text-text-tertiary">{task.task_type.replaceAll("_", " ")} · {runs.length} device(s)</div>
+                  </div>
+                  <div className="text-[11px] text-text-tertiary">
+                    {runs.filter((r) => r.status === "success").length}/{runs.length} ok
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {realTasks.length === 0 && showDemo && (
+            <div className="divide-y divide-border-subtle">
+              {mockTasks.map((t) => (
                 <div key={t.id} className="flex items-center justify-between px-3 py-2.5 text-[12px]">
                   <div>
                     <div className="font-medium text-text-primary">{t.name}</div>
@@ -96,11 +127,24 @@ export function DashboardScreen() {
 
         <Card>
           <CardHeader title="Audit log" subtitle="Sensitive operations" />
-          {!showDemo ? (
-            <EmptyState title="No audit entries yet" detail="Audit logging isn't implemented yet." />
-          ) : (
+          {realAudit.length === 0 && !showDemo && (
+            <EmptyState title="No audit entries yet" detail="Sensitive operations (device add/remove, credential edits, tasks) will show up here." />
+          )}
+          {realAudit.length > 0 && (
             <div className="divide-y divide-border-subtle">
-              {auditLog.map((a) => (
+              {realAudit.slice(0, 6).map((a) => (
+                <div key={a.id} className="px-3 py-2.5 text-[12px]">
+                  <div className="text-text-primary">
+                    <span className="font-medium">{a.actor}</span> — {a.action.replaceAll("_", " ")}
+                  </div>
+                  <div className="text-[11px] text-text-tertiary">{a.target ?? "—"} · {formatAuditTime(a.at)}</div>
+                </div>
+              ))}
+            </div>
+          )}
+          {realAudit.length === 0 && showDemo && (
+            <div className="divide-y divide-border-subtle">
+              {mockAuditLog.map((a) => (
                 <div key={a.id} className="px-3 py-2.5 text-[12px]">
                   <div className="text-text-primary">
                     <span className="font-medium">{a.actor}</span> — {a.action.replaceAll("_", " ")}

@@ -6,18 +6,22 @@ import { Card, CardHeader } from "../../components/ui/Card";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { AddDeviceModal } from "../../components/devices/AddDeviceModal";
 import * as discovery from "../../ipc/discovery";
-import type { DiscoveredDevice } from "../../ipc/discovery";
+import { useNetworkScannerStore } from "../../state/networkScanner";
 
 export function NetworkScannerScreen() {
-  const [cidr, setCidr] = useState("");
+  const cidr = useNetworkScannerStore((s) => s.cidr);
+  const setCidr = useNetworkScannerStore((s) => s.setCidr);
+  const results = useNetworkScannerStore((s) => s.results);
+  const setResults = useNetworkScannerStore((s) => s.setResults);
   const [scanning, setScanning] = useState(false);
-  const [results, setResults] = useState<DiscoveredDevice[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [connectHost, setConnectHost] = useState<string | null>(null);
 
   useEffect(() => {
-    discovery.getDefaultCidr().then((c) => c && setCidr(c)).catch(() => {});
-  }, []);
+    if (!cidr) {
+      discovery.getDefaultCidr().then((c) => c && setCidr(c)).catch(() => {});
+    }
+  }, [cidr, setCidr]);
 
   async function runScan() {
     setScanning(true);

@@ -85,6 +85,7 @@ export function DeviceLayout() {
   const device = allDevices.find((d) => d.id === deviceId);
   const realDevice = useRealDevicesStore((s) => s.devices.find((d) => d.id === deviceId));
   const updateDevice = useRealDevicesStore((s) => s.updateDevice);
+  const setStatus = useRealDevicesStore((s) => s.setStatus);
   const removeDevice = useRealDevicesStore((s) => s.removeDevice);
 
   const [reconnecting, setReconnecting] = useState(false);
@@ -109,10 +110,10 @@ export function DeviceLayout() {
     setReconnecting(true);
     try {
       await testConnection(realDevice.connection);
-      updateDevice(realDevice.id, { status: "online", lastSeen: "just now" });
+      setStatus(realDevice.id, "online", "just now");
       showToast("Reconnected successfully");
     } catch (e) {
-      updateDevice(realDevice.id, { status: "offline" });
+      setStatus(realDevice.id, "offline");
       showToast(`Reconnect failed: ${String(e)}`);
     } finally {
       setReconnecting(false);
@@ -125,7 +126,7 @@ export function DeviceLayout() {
     setRebooting(true);
     try {
       await execCommand(realDevice.connection, "sudo reboot");
-      updateDevice(realDevice.id, { status: "offline" });
+      setStatus(realDevice.id, "offline");
       showToast("Reboot command sent");
     } catch (e) {
       showToast(`Reboot failed: ${String(e)}`);

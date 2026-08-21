@@ -5,21 +5,27 @@ import { Button } from "../../components/ui/Button";
 import { EmptyState } from "../../components/ui/EmptyState";
 import * as serial from "../../ipc/serial";
 import type { SerialPortEntry } from "../../ipc/serial";
+import { useSerialSessionStore } from "../../state/serialSession";
 
 export function SerialScreen() {
   const [ports, setPorts] = useState<SerialPortEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<string | null>(null);
 
-  const [baudRate, setBaudRate] = useState("57600");
-  const [parity, setParity] = useState("none");
-  const [stopBits, setStopBits] = useState("1");
-  const [flowControl, setFlowControl] = useState("none");
+  const selected = useSerialSessionStore((s) => s.selected);
+  const setSelected = useSerialSessionStore((s) => s.setSelected);
+  const baudRate = useSerialSessionStore((s) => s.baudRate);
+  const parity = useSerialSessionStore((s) => s.parity);
+  const stopBits = useSerialSessionStore((s) => s.stopBits);
+  const flowControl = useSerialSessionStore((s) => s.flowControl);
+  const setConfig = useSerialSessionStore((s) => s.setConfig);
+  const sessionId = useSerialSessionStore((s) => s.sessionId);
+  const setSessionId = useSerialSessionStore((s) => s.setSessionId);
+  const lines = useSerialSessionStore((s) => s.lines);
+  const appendLine = useSerialSessionStore((s) => s.appendLine);
+  const resetLines = useSerialSessionStore((s) => s.resetLines);
 
-  const [sessionId, setSessionId] = useState<string | null>(null);
   const [connecting, setConnecting] = useState(false);
-  const [lines, setLines] = useState<string[]>([]);
   const [input, setInput] = useState("");
   const logRef = useRef<HTMLDivElement>(null);
 
@@ -39,37 +45,33 @@ export function SerialScreen() {
   useEffect(refresh, []);
 
   useEffect(() => {
+    // Subscribed at module scope regardless of sessionId so events keep
+    // flowing into the store even if this component briefly isn't mounted
+    // in between renders; the sid check still scopes lines to this session.
     const unData = serial.onSerialData((sid, data) => {
-      if (sid !== sessionId) return;
-      setLines((prev) => [...prev.slice(-500), data]);
+      if (sid !== useSerialSessionStore.getState().sessionId) return;
+      appendLine(data);
     });
     const unClosed = serial.onSerialClosed((sid) => {
-      if (sid !== sessionId) return;
-      setLines((prev) => [...prev, "\n[session closed]"]);
+      if (sid !== useSerialSessionStore.getState().sessionId) return;
+      appendLine("\n[session closed]");
       setSessionId(null);
     });
     return () => {
       unData.then((u) => u());
       unClosed.then((u) => u());
     };
-  }, [sessionId]);
+  }, [appendLine, setSessionId]);
 
   useEffect(() => {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight });
   }, [lines]);
 
-  useEffect(() => {
-    return () => {
-      if (sessionId) serial.closePort(sessionId).catch(() => {});
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   async function handleOpen() {
     if (!selected) return;
     setConnecting(true);
     setError(null);
-    setLines([]);
+    resetLines();
     try {
       const id = await serial.openPort(selected, Number(baudRate), parity, stopBits, flowControl);
       setSessionId(id);
@@ -131,27 +133,27 @@ export function SerialScreen() {
         <CardHeader title="Session settings" />
         <div className="grid grid-cols-4 gap-3 p-3">
           <Field label="Baud rate">
-            <select value={baudRate} onChange={(e) => setBaudRate(e.target.value)} disabled={!!sessionId} className={selectCls}>
+            <select value={baudRate} onChange={(e) => setConfig({ baudRate: e.target.value })} disabled={!!sessionId} className={selectCls}>
               {["9600", "57600", "115200", "921600"].map((b) => (
                 <option key={b}>{b}</option>
               ))}
             </select>
           </Field>
           <Field label="Parity">
-            <select value={parity} onChange={(e) => setParity(e.target.value)} disabled={!!sessionId} className={selectCls}>
+            <select value={parity} onChange={(e) => setConfig({ parity: e.target.value })} disabled={!!sessionId} className={selectCls}>
               <option value="none">None</option>
               <option value="even">Even</option>
               <option value="odd">Odd</option>
             </select>
           </Field>
           <Field label="Stop bits">
-            <select value={stopBits} onChange={(e) => setStopBits(e.target.value)} disabled={!!sessionId} className={selectCls}>
+            <select value={stopBits} onChange={(e) => setConfig({ stopBits: e.target.value })} disabled={!!sessionId} className={selectCls}>
               <option value="1">1</option>
               <option value="2">2</option>
             </select>
           </Field>
           <Field label="Flow control">
-            <select value={flowControl} onChange={(e) => setFlowControl(e.target.value)} disabled={!!sessionId} className={selectCls}>
+            <select value={flowControl} onChange={(e) => setConfig({ flowControl: e.target.value })} disabled={!!sessionId} className={selectCls}>
               <option value="none">None</option>
               <option value="rtscts">RTS/CTS</option>
               <option value="xonxoff">XON/XOFF</option>

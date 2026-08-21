@@ -104,20 +104,13 @@ pub async fn scan(cidr: &str) -> Result<Vec<DiscoveredDevice>> {
     );
 
     let probes = stream::iter(ips.into_iter().map(|ip| async move {
-        let addr = SocketAddr::from((ip, 22));
         let start = std::time::Instant::now();
-        let (ssh_open, alive) = tokio::join!(
-            async {
-                tokio::time::timeout(Duration::from_millis(400), TcpStream::connect(addr))
-                    .await
-                    .map(|r| r.is_ok())
-                    .unwrap_or(false)
-            },
-            ping_once(ip)
-        );
-        (ip, ssh_open, alive, start.elapsed().as_millis() as u64)
+        let ssh_probe = tcp_probe(ip, 22);
+        let alive_probe = any_port_reachable(ip);
+        let (ssh_open, alive) = tokio::join!(ssh_probe, alive_probe);
+        (ip, ssh_open, ssh_open || alive, start.elapsed().as_millis() as u64)
     }))
-    .buffer_unordered(64)
+    .buffer_unordered(256)
     .collect::<Vec<_>>()
     .await;
 
@@ -126,9 +119,13 @@ pub async fn scan(cidr: &str) -> Result<Vec<DiscoveredDevice>> {
 
     let arp = read_arp_table().await;
 
+    // A TCP connect attempt makes the OS resolve ARP for that IP even when
+    // every probed port times out at L4 — so a host with a fresh ARP entry
+    // is provably alive too, catching devices that don't answer on any of
+    // the handful of ports we probe above.
     let mut devices: Vec<DiscoveredDevice> = probes
         .into_iter()
-        .filter(|(_, ssh_open, alive, _)| *ssh_open || *alive)
+        .filter(|(ip, ssh_open, alive, _)| *ssh_open || *alive || arp.contains_key(&ip.to_string()))
         .map(|(ip, ssh_open, _, latency)| {
             let ip_str = ip.to_string();
             let mac = arp.get(&ip_str).cloned();
@@ -147,34 +144,29 @@ pub async fn scan(cidr: &str) -> Result<Vec<DiscoveredDevice>> {
     Ok(devices)
 }
 
-/// General liveness check (any device, not just SSH) via the system `ping`
-/// binary — a single ICMP echo, platform-specific flags. Used so the
-/// scanner surfaces every reachable host (phones, laptops, etc.), not just
-/// SSH-capable companion computers; `ssh_open` on each result still tells
-/// you which ones this app can actually manage.
-async fn ping_once(ip: Ipv4Addr) -> bool {
-    let ip_str = ip.to_string();
-    let mut cmd = if cfg!(target_os = "windows") {
-        let mut c = Command::new("ping");
-        c.args(["-n", "1", "-w", "400", &ip_str]);
-        c
-    } else if cfg!(target_os = "macos") {
-        let mut c = Command::new("ping");
-        c.args(["-c", "1", "-W", "400", &ip_str]);
-        c
-    } else {
-        // Linux: -W is whole seconds, not milliseconds.
-        let mut c = Command::new("ping");
-        c.args(["-c", "1", "-W", "1", &ip_str]);
-        c
-    };
-    cmd.kill_on_drop(true);
-    cmd.stdout(std::process::Stdio::null());
-    cmd.stderr(std::process::Stdio::null());
-    tokio::time::timeout(Duration::from_millis(500), cmd.status())
+async fn tcp_probe(ip: Ipv4Addr, port: u16) -> bool {
+    let addr = SocketAddr::from((ip, port));
+    // A refused connection (fast RST) still proves the host is up and
+    // answering on the wire — only a real timeout means "no response".
+    tokio::time::timeout(Duration::from_millis(350), TcpStream::connect(addr))
         .await
-        .ok()
-        .and_then(|r| r.ok())
-        .map(|status| status.success())
-        .unwrap_or(false)
+        .is_ok()
+}
+
+/// General liveness check (any device, not just SSH) — races TCP connect
+/// attempts against several ports common enough that most live hosts will
+/// answer (open or actively refused) on at least one of them. Deliberately
+/// not ICMP ping: spawning a `ping` subprocess per host is the dominant
+/// cost of a full /24 sweep, and plenty of OSes (Windows, by default) drop
+/// ICMP echo anyway, which would make ping-based liveness unreliable too.
+async fn any_port_reachable(ip: Ipv4Addr) -> bool {
+    const PORTS: [u16; 6] = [80, 443, 445, 139, 62078, 7000];
+    let mut probes = futures::stream::iter(PORTS.into_iter().map(move |port| async move { tcp_probe(ip, port).await }))
+        .buffer_unordered(PORTS.len());
+    while let Some(reachable) = probes.next().await {
+        if reachable {
+            return true;
+        }
+    }
+    false
 }
