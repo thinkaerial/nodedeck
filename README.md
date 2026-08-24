@@ -1,5 +1,9 @@
 # NodeDeck
 
+[![Build](https://github.com/thinkaerial/nodedeck/actions/workflows/build.yml/badge.svg)](https://github.com/thinkaerial/nodedeck/actions/workflows/build.yml)
+[![Latest release](https://img.shields.io/github/v/release/thinkaerial/nodedeck)](https://github.com/thinkaerial/nodedeck/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 A cross-platform desktop app for managing fleets of Raspberry Pi–class **companion computers** — the onboard Linux boards on drones and robots that run your flight/vision/telemetry stack alongside the flight controller. Built with [Tauri](https://tauri.app/) (Rust) + React/TypeScript.
 
 **Who it's for**: drone and robotics builders, research labs, and hobbyists who are managing more than a couple of Raspberry Pi–class boards over SSH and are tired of juggling a terminal window, WinSCP/Cyberduck, and a spreadsheet of IPs for each one. If you SSH into a companion computer more than once a week, this is for you.
@@ -43,7 +47,9 @@ This is an early-stage project, actively being built out. Not everything is fini
 
 ## Getting started
 
-See [USER_GUIDE.md](USER_GUIDE.md) for full install and first-use steps. Quick version for building from source:
+**Just want to run it?** Grab the latest installer for your platform from [Releases](https://github.com/thinkaerial/nodedeck/releases/latest) — no build tools needed. See [USER_GUIDE.md](USER_GUIDE.md) for install/first-use steps.
+
+**Building from source:**
 
 Requirements: [Node.js](https://nodejs.org/) 20+, [Rust](https://rustup.rs/) (stable), and the platform prerequisites for [Tauri](https://tauri.app/start/prerequisites/).
 

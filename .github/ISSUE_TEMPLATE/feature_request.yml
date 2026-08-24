@@ -1,0 +1,17 @@
+name: Feature request
+description: Suggest something NodeDeck should do
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: What are you trying to do that NodeDeck doesn't support today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you want it to do?
+    validations:
+      required: false

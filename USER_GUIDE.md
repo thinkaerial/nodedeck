@@ -10,7 +10,19 @@ Everything runs locally on your machine. There's no cloud account, no server, no
 
 ## Installing
 
-### Option A — build from source (works today, all platforms)
+### Option A — download a release (easiest, no build tools needed)
+
+Go to [Releases](https://github.com/thinkaerial/nodedeck/releases/latest) and grab the installer for your platform:
+- **macOS (Apple Silicon)**: the `.dmg`
+- **Windows (x64)**: the `.exe` or `.msi`
+
+The app isn't code-signed yet (see [Status](README.md#status)), so:
+- **macOS** will refuse to open it the first time with "cannot be opened because the developer cannot be verified." Right-click (or Control-click) the app → **Open** → confirm. You only need to do this once.
+- **Windows** SmartScreen may show "Windows protected your PC." Click **More info** → **Run anyway**.
+
+There's no Intel-Mac or Linux build published yet — if you're on either, use Option B below.
+
+### Option B — build from source (all platforms, incl. Intel Mac / Linux)
 
 You'll need:
 - [Node.js](https://nodejs.org/) 20 or newer
@@ -31,13 +43,7 @@ The build takes a few minutes. When it finishes:
 - **Windows**: an `.msi` and/or `.exe` installer under `src-tauri\target\release\bundle\`. Run it like any other installer.
 - **Linux**: an `.AppImage` and/or `.deb`/`.rpm` under `src-tauri/target/release/bundle/`, depending on your distro's packaging tools.
 
-The app isn't code-signed yet (see [Status](README.md#status)), so:
-- **macOS** will refuse to open it the first time with "cannot be opened because the developer cannot be verified." Right-click (or Control-click) the app → **Open** → confirm. You only need to do this once.
-- **Windows** SmartScreen may show "Windows protected your PC." Click **More info** → **Run anyway**.
-
-### Option B — download a CI build
-
-Every push to `main` triggers a GitHub Actions build for macOS and Windows (see `.github/workflows/build.yml`). If you don't want to build it yourself, check the repo's **Actions** tab for the latest successful run and download the `nodedeck-macos` or `nodedeck-windows` artifact. Same Gatekeeper/SmartScreen notes as above apply.
+Same Gatekeeper/SmartScreen notes as Option A apply.
 
 ## First launch
 
