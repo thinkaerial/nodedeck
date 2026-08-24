@@ -22,7 +22,7 @@ Everything is local — no server, no account, no sync. Device credentials and i
 
 ## Status
 
-This is an early-stage project, actively being built out. Not everything is finished or hardened yet — see [TASKS.md](TASKS.md) for a maintained, honest breakdown of what's real/verified vs. still rough, including known gaps (device credentials aren't yet in the OS keychain, Windows is largely untested, no code signing yet, no automated frontend test suite). Contributions and bug reports very welcome.
+This is an early-stage project, actively being built out. Not everything is finished or hardened yet — known gaps include device credentials not yet living in the OS keychain, Windows being largely untested, no code signing yet, and no automated frontend test suite. Contributions and bug reports very welcome.
 
 ## Getting started
 
@@ -43,7 +43,7 @@ Windows and macOS builds are also produced by CI on push to `main` — see `.git
 
 ## Contributing
 
-Issues and pull requests are welcome. If you're picking this up for the first time, `TASKS.md`, `DEVELOPMENT_PLAN.md`, and `DB_SCHEMA.md` are the best places to understand current scope and design decisions.
+Issues and pull requests are welcome. The codebase is a fairly standard Tauri app — React/TypeScript in `src/`, Rust in `src-tauri/src/` (`core/` for the actual logic, `commands/` for the thin Tauri IPC layer).
 
 ## License
 

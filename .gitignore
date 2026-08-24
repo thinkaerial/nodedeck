@@ -12,3 +12,13 @@ src-tauri/target/
 # Local env
 .env
 .env.local
+
+# Internal planning docs — kept locally, not part of the public repo
+CHECKLIST.md
+Companion_Computer_Manager_Technical_Requirements.docx
+DB_SCHEMA.md
+DEVELOPMENT_PLAN.md
+FILE_STRUCTURE.md
+STATUS.md
+SUGGESTIONS.md
+TASKS.md
