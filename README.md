@@ -14,6 +14,8 @@ The network scanner, SSH terminal, and SFTP file transfer aren't drone-specific 
 
 **New here?** [USER_GUIDE.md](USER_GUIDE.md) walks through installing and using NodeDeck step by step, no prior experience assumed.
 
+![NodeDeck demo](docs/screenshots/demo.gif)
+
 ## Screenshots
 
 | | |
