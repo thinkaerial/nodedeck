@@ -2,6 +2,8 @@
 
 A cross-platform desktop app for managing fleets of Raspberry Pi–class **companion computers** — the onboard Linux boards on drones and robots that run your flight/vision/telemetry stack alongside the flight controller. Built with [Tauri](https://tauri.app/) (Rust) + React/TypeScript.
 
+**Who it's for**: drone and robotics builders, research labs, and hobbyists who are managing more than a couple of Raspberry Pi–class boards over SSH and are tired of juggling a terminal window, WinSCP/Cyberduck, and a spreadsheet of IPs for each one. If you SSH into a companion computer more than once a week, this is for you.
+
 Discover devices on your network, connect over SSH, browse and transfer files, watch live system stats, tail logs, run fleet-wide tasks, and manage USB-serial consoles — all from one app, with everything stored locally on your machine.
 
 **New here?** [USER_GUIDE.md](USER_GUIDE.md) walks through installing and using NodeDeck step by step, no prior experience assumed.
