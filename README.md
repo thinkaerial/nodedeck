@@ -6,6 +6,8 @@ A cross-platform desktop app for managing fleets of Raspberry Pi–class **compa
 
 Discover devices on your network, connect over SSH, browse and transfer files, watch live system stats, tail logs, run fleet-wide tasks, and manage USB-serial consoles — all from one app, with everything stored locally on your machine.
 
+The network scanner, SSH terminal, and SFTP file transfer aren't drone-specific either — they work against any SSH-reachable Linux box on your LAN, so NodeDeck is equally usable as a general-purpose network device finder / SSH client / file-transfer tool even if you've never touched a drone.
+
 **New here?** [USER_GUIDE.md](USER_GUIDE.md) walks through installing and using NodeDeck step by step, no prior experience assumed.
 
 ## Screenshots
